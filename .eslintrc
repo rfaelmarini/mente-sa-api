@@ -12,6 +12,7 @@
     "@typescript-eslint/no-misused-promises": "off",
     "@typescript-eslint/no-namespace": "off",
     "import/export": "off",
-    "@typescript-eslint/method-signature-style":["error", "method"]
+    "@typescript-eslint/method-signature-style":["error", "method"],
+    "@typescript-eslint/space-before-function-paren": ["error", "never"]
   }
 }
