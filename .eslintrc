@@ -13,6 +13,10 @@
     "@typescript-eslint/no-namespace": "off",
     "import/export": "off",
     "@typescript-eslint/method-signature-style":["error", "method"],
-    "@typescript-eslint/space-before-function-paren": ["error", "never"]
+    "@typescript-eslint/space-before-function-paren": ["error", {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+     }]
   }
 }
