@@ -1,5 +1,10 @@
 import { DbAddAccount } from './db-add-account'
-import { Encrypter, AddAccountModel, AccountModel, AddAccountRepository } from './db-add-account-protocols'
+import {
+  Encrypter,
+  AddAccountModel,
+  AccountModel,
+  AddAccountRepository
+} from './db-add-account-protocols'
 
 const makeEncrypter = (): Encrypter => {
   class EncrypterStub implements Encrypter {
@@ -14,18 +19,25 @@ const makeEncrypter = (): Encrypter => {
 const makeAddAccountRepository = (): AddAccountRepository => {
   class AddAccountRepositoryStub implements AddAccountRepository {
     async add(accountData: AddAccountModel): Promise<AccountModel> {
-      const fakeAccount = {
-        id: 'some_id',
-        name: 'some_name',
-        email: 'some_email@email.com',
-        password: 'hashed_password'
-      }
-      return new Promise((resolve) => resolve(fakeAccount))
+      return new Promise((resolve) => resolve(makeFakeAccount()))
     }
   }
 
   return new AddAccountRepositoryStub()
 }
+
+const makeFakeAccount = (): AccountModel => ({
+  id: 'some_id',
+  name: 'some_name',
+  email: 'some_email@email.com',
+  password: 'hashed_password'
+})
+
+const makeFakeAccountData = (): AddAccountModel => ({
+  name: 'some_name',
+  email: 'some_email@email.com',
+  password: 'some_password'
+})
 
 interface SutTypes {
   sut: DbAddAccount
@@ -48,36 +60,25 @@ describe('DbAddAccount Usecase', () => {
   test('Should call encrypter with correct password', async () => {
     const { encrypterStub, sut } = makeSut()
     const encryptSpy = jest.spyOn(encrypterStub, 'encrypt')
-    const accountData = {
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'some_password'
-    }
-    await sut.add(accountData)
-    expect(encryptSpy).toHaveBeenCalledWith(accountData.password)
+    await sut.add(makeFakeAccountData())
+    expect(encryptSpy).toHaveBeenCalledWith(makeFakeAccountData().password)
   })
 
   test('Should throw if encrypter throws', async () => {
     const { encrypterStub, sut } = makeSut()
-    jest.spyOn(encrypterStub, 'encrypt').mockReturnValueOnce(new Promise((resolve, reject) => reject(new Error())))
-    const accountData = {
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'some_password'
-    }
-    const promise = sut.add(accountData)
+    jest
+      .spyOn(encrypterStub, 'encrypt')
+      .mockReturnValueOnce(
+        new Promise((resolve, reject) => reject(new Error()))
+      )
+    const promise = sut.add(makeFakeAccountData())
     await expect(promise).rejects.toThrow()
   })
 
   test('Should call AddAccountRepository with correct values', async () => {
     const { addAccountRepositoryStub, sut } = makeSut()
     const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
-    const accountData = {
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'some_password'
-    }
-    await sut.add(accountData)
+    await sut.add(makeFakeAccountData())
     expect(addSpy).toHaveBeenCalledWith({
       name: 'some_name',
       email: 'some_email@email.com',
@@ -89,29 +90,16 @@ describe('DbAddAccount Usecase', () => {
     const { addAccountRepositoryStub, sut } = makeSut()
     jest
       .spyOn(addAccountRepositoryStub, 'add')
-      .mockReturnValueOnce(new Promise((resolve, reject) => reject(new Error())))
-    const accountData = {
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'some_password'
-    }
-    const promise = sut.add(accountData)
+      .mockReturnValueOnce(
+        new Promise((resolve, reject) => reject(new Error()))
+      )
+    const promise = sut.add(makeFakeAccountData())
     await expect(promise).rejects.toThrow()
   })
 
   test('Should return an account on success', async () => {
     const { sut } = makeSut()
-    const accountData = {
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'some_password'
-    }
-    const account = await sut.add(accountData)
-    expect(account).toEqual({
-      id: 'some_id',
-      name: 'some_name',
-      email: 'some_email@email.com',
-      password: 'hashed_password'
-    })
+    const account = await sut.add(makeFakeAccountData())
+    expect(account).toEqual(makeFakeAccount())
   })
 })
